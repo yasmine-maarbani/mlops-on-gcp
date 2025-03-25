@@ -20,12 +20,18 @@
 #
 
 steps:
-  # Build the image that encapsulates the pipeline.
+  # Build the pipeline Docker image
   - name: "gcr.io/cloud-builders/docker"
     args: ["build", "-t", "gcr.io/$PROJECT_ID/$_TFX_IMAGE_NAME:$TAG_NAME", "."]
     dir: $_PIPELINE_FOLDER
 
-  - name: "gcr.io/tfx-oss-public/tfx-cli"
+  # NEW STEP: Build tfx-cli
+  - name: "gcr.io/cloud-builders/docker"
+    args: ["build", "-t", "gcr.io/$PROJECT_ID/tfx-cli", "."]
+    dir: workshops/tfx-caip-tf23/lab-03-tfx-cicd/labs/tfx-cli
+
+  # Deploy pipeline with tfx-cli
+  - name: "gcr.io/$PROJECT_ID/tfx-cli"
     args:
       [
         "pipeline",
@@ -52,8 +58,8 @@ steps:
       - "ENABLE_TUNING=$_ENABLE_TUNING"
     dir: $_PIPELINE_FOLDER
 
-# Push the custom image to Container Registry
-images: ["gcr.io/$PROJECT_ID/$_TFX_IMAGE_NAME:$TAG_NAME"]
+images:
+  - "gcr.io/$PROJECT_ID/$_TFX_IMAGE_NAME:$TAG_NAME"
 
 options:
   logging: CLOUD_LOGGING_ONLY
